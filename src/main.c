@@ -495,6 +495,9 @@ int main(void)
 	k_sem_take(&wifi_connected_sem, K_FOREVER);
 	/* Wait for the interface to be up */
 	k_sleep(K_SECONDS(6));
+	LOG_INF("Reading IMU...\n");
+	read_IMU();
+	k_sleep(K_SECONDS(1));
 	LOG_INF("Connecting to MQTT Broker...");
 	/* Connect to MQTT Broker */
 	connect_mqtt();

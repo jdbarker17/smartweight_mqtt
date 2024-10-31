@@ -11,6 +11,17 @@ project(provisioning)
 
 target_sources(app PRIVATE  src/main.c
                             src/mqtt_connection.c
+                            src/sensor.c
+                            
+)
+
+# Preinitialization related to Thingy:53 DFU
+target_sources_ifdef(CONFIG_BOARD_THINGY53_NRF5340_CPUAPP app PRIVATE
+  boards/thingy53.c
+)
+target_sources_ifdef(CONFIG_BOARD_THINGY53_NRF5340_CPUAPP_NS app PRIVATE
+  boards/thingy53.c
 )
 
 zephyr_library_include_directories(inc)
+zephyr_library_include_directories(.)
