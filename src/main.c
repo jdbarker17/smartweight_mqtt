@@ -25,6 +25,7 @@
 #include <zephyr/net/socket.h>
 #include <zephyr/net/mqtt.h>
 #include <dk_buttons_and_leds.h>
+#include <zephyr/drivers/sensor.h>
 
 #include "mqtt_connection.h"
 
@@ -265,14 +266,32 @@ static void update_dev_name(struct net_linkaddr *mac_addr)
 	byte_to_hex(&device_name[6], mac_addr->addr[5], 'A');
 }
 
+// Acc Conversion
+void sensor_value_to_string(struct sensor_value *value, char *buffer, size_t buffer_size)
+{
+    // Format the struct into a string with integer and fractional parts
+    snprintf(buffer, buffer_size, "%d.%06d", value->val1, value->val2);
+}
+
 // MQTT Inserts
 static void button_handler(uint32_t button_state, uint32_t has_changed)
 {
 	switch (has_changed) {
 	case DK_BTN1_MSK:
-		if (button_state & DK_BTN1_MSK){	
+		if (button_state & DK_BTN1_MSK){
+			struct sensor_value acc[3], gyr[3];
+			char acc_str[3][32];  // Buffer to hold string representations of acc values
+
+			// Convert each `sensor_value` to a string
+			for (int i = 0; i < 3; i++) {
+				sensor_value_to_string(&acc[i], acc_str[i], sizeof(acc_str[i]));
+				printk("Accelerometer axis %d: %s\n", i, acc_str[i]);
+			}
+			read_IMU(acc,gyr);
+			//int err = data_publish(&client, MQTT_QOS_1_AT_LEAST_ONCE,
+			//	   CONFIG_BUTTON1_EVENT_PUBLISH_MSG, sizeof(CONFIG_BUTTON1_EVENT_PUBLISH_MSG)-1);
 			int err = data_publish(&client, MQTT_QOS_1_AT_LEAST_ONCE,
-				   CONFIG_BUTTON1_EVENT_PUBLISH_MSG, sizeof(CONFIG_BUTTON1_EVENT_PUBLISH_MSG)-1);
+				acc_str[0], sizeof(acc_str[0])-1);
 			if (err) {
 				LOG_ERR("Failed to send message, %d", err);
 				return;	
@@ -496,7 +515,7 @@ int main(void)
 	/* Wait for the interface to be up */
 	k_sleep(K_SECONDS(6));
 	LOG_INF("Reading IMU...\n");
-	read_IMU();
+	//read_IMU();
 	k_sleep(K_SECONDS(1));
 	LOG_INF("Connecting to MQTT Broker...");
 	/* Connect to MQTT Broker */

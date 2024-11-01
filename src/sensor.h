@@ -2,4 +2,4 @@
 
 /**@brief Prints Out an IMU value to the console. Eventually will read the value
  */
-int read_IMU(void);
+struct sensor_value read_IMU(void);
